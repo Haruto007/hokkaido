@@ -1,0 +1,37 @@
+name: Deploy GAS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリ取得
+        uses: actions/checkout@v4
+
+      - name: Node.js をセットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: clasp をインストール
+        run: npm install -g @google/clasp
+
+      - name: 認証ファイルを復元
+        run: |
+          echo '${{ secrets.CLASPRC_JSON }}' > ~/.clasprc.json
+          echo '${{ secrets.CLASP_JSON }}' > .clasp.json
+
+      - name: 認証ファイル確認
+        run: |
+          ls -la ~
+          ls -la
+          cat .clasp.json
+
+      - name: GAS に push
+        run: clasp push -f
