@@ -59,7 +59,6 @@ function savePlace(place) {
   const normalized = {
     id: place.id || Utilities.getUuid(),
     name: String(place.name || '').trim(),
-    area: String(place.area || '').trim(),
     address: String(place.address || '').trim(),
     note: String(place.note || '').trim(),
     day: String(place.day || '').trim(),

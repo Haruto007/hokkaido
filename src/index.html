@@ -604,14 +604,17 @@
         <h2>場所を追加</h2>
         <form id="placeForm" class="form-grid">
           <input type="hidden" id="placeId">
-          <label class="span-2">場所
+          <label class="span-3">場所
             <input id="placeName" placeholder="例: 小樽運河" required>
           </label>
-          <label>エリア
-            <input id="placeArea" placeholder="小樽">
-          </label>
-          <label>日程
-            <input id="placeDay" placeholder="1日目">
+          <label class="span-2">日程
+            <select id="placeDay">
+              <option value="">未定</option>
+              <option value="1日目">1日目</option>
+              <option value="2日目">2日目</option>
+              <option value="3日目">3日目</option>
+              <option value="4日目">4日目</option>
+            </select>
           </label>
           <label>状態
             <select id="placeStatus">
@@ -762,7 +765,6 @@
       const place = {
         id: $('#placeId').value,
         name: $('#placeName').value,
-        area: $('#placeArea').value,
         address: $('#placeAddress').value,
         note: $('#placeNote').value,
         day: $('#placeDay').value,
@@ -937,7 +939,7 @@
           <div class="item-head">
             <div>
               <div class="item-title">${index + 1}. ${escapeHtml(place.name)}</div>
-              <div class="item-meta">${[place.day, place.area, place.status].filter(Boolean).map(escapeHtml).join(' / ')}</div>
+              <div class="item-meta">${[place.day, place.status].filter(Boolean).map(escapeHtml).join(' / ')}</div>
             </div>
             <div class="item-actions">
               ${routeMode ? routeButtons(place.id, index) : `<button class="secondary" type="button" onclick="editPlace('${place.id}')">編集</button>`}
@@ -1000,7 +1002,7 @@
     }
 
     function placeQuery(place) {
-      return [place.name, place.address, place.area, '北海道'].filter(Boolean).join(' ');
+      return [place.name, place.address, '北海道'].filter(Boolean).join(' ');
     }
 
     function movePlace(id, direction) {
@@ -1037,7 +1039,6 @@
       if (!place) return;
       $('#placeId').value = place.id;
       $('#placeName').value = place.name;
-      $('#placeArea').value = place.area || '';
       $('#placeAddress').value = place.address || '';
       $('#placeNote').value = place.note || '';
       $('#placeDay').value = place.day || '';
@@ -1073,6 +1074,7 @@
     function clearPlaceForm() {
       $('#placeForm').reset();
       $('#placeId').value = '';
+      $('#placeDay').value = '';
       $('#placeStatus').value = '行きたい';
     }
 
