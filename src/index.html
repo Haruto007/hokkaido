@@ -356,6 +356,12 @@
       align-items: center;
     }
 
+    .route-filter {
+      display: grid;
+      min-width: min(260px, 100%);
+      gap: 5px;
+    }
+
     .muted {
       color: var(--muted);
     }
@@ -646,8 +652,18 @@
         <div class="route-tools">
           <div>
             <h2>地図とルート</h2>
-            <p class="muted">リスト順でルートを作ります。順番は上下ボタンで編集できます。</p>
+            <p class="muted">日程ごとのリスト順でルートを作ります。順番は上下ボタンで編集できます。</p>
           </div>
+          <label class="route-filter">日程を選択
+            <select id="routeDayFilter">
+              <option value="all">全日程</option>
+              <option value="1日目">1日目</option>
+              <option value="2日目">2日目</option>
+              <option value="3日目">3日目</option>
+              <option value="4日目">4日目</option>
+              <option value="">未定</option>
+            </select>
+          </label>
           <a id="routeLink" href="#" target="_blank" rel="noreferrer">Google マップでルート確認</a>
         </div>
       </div>
@@ -700,6 +716,10 @@
       $('#expenseForm').addEventListener('submit', saveExpense);
       $('#placeForm').addEventListener('submit', savePlace);
       $('#splitMode').addEventListener('change', updateSplitWithAvailability);
+      $('#routeDayFilter').addEventListener('change', () => {
+        renderRoute();
+        renderMap();
+      });
       $('#clearExpenseFormButton').addEventListener('click', clearExpenseForm);
       $('#clearPlaceFormButton').addEventListener('click', clearPlaceForm);
     }
@@ -921,17 +941,23 @@
     }
 
     function renderRoute() {
-      if (!state.places.length) {
-        $('#routeList').innerHTML = '<div class="empty">場所を追加して、旅の順番を作りましょう。</div>';
+      const routePlaces = getRoutePlaces();
+      const selectedDay = getSelectedRouteDay();
+
+      if (!routePlaces.length) {
+        const message = state.places.length
+          ? `${routeDayLabel(selectedDay)}の場所はまだありません。`
+          : '場所を追加して、旅の順番を作りましょう。';
+        $('#routeList').innerHTML = `<div class="empty">${escapeHtml(message)}</div>`;
         $('#routeLink').href = '#';
         return;
       }
 
-      $('#routeList').innerHTML = state.places.map((place, index) => placeCard(place, index, true)).join('');
-      $('#routeLink').href = buildRouteUrl();
+      $('#routeList').innerHTML = routePlaces.map((place, index) => placeCard(place, index, true, routePlaces)).join('');
+      $('#routeLink').href = buildRouteUrl(routePlaces);
     }
 
-    function placeCard(place, index, routeMode) {
+    function placeCard(place, index, routeMode, routePlaces) {
       const query = placeQuery(place);
       const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
       return `
@@ -942,7 +968,7 @@
               <div class="item-meta">${[place.day, place.status].filter(Boolean).map(escapeHtml).join(' / ')}</div>
             </div>
             <div class="item-actions">
-              ${routeMode ? routeButtons(place.id, index) : `<button class="secondary" type="button" onclick="editPlace('${place.id}')">編集</button>`}
+              ${routeMode ? routeButtons(place.id, index, routePlaces) : `<button class="secondary" type="button" onclick="editPlace('${place.id}')">編集</button>`}
               <a href="${mapsUrl}" target="_blank" rel="noreferrer">地図</a>
               <button class="danger" type="button" onclick="removePlace('${place.id}')">削除</button>
             </div>
@@ -953,33 +979,35 @@
       `;
     }
 
-    function routeButtons(id, index) {
+    function routeButtons(id, index, routePlaces) {
+      const lastIndex = routePlaces.length - 1;
       return `
         <button class="icon secondary" type="button" ${index === 0 ? 'disabled' : ''} onclick="movePlace('${id}', -1)">↑</button>
-        <button class="icon secondary" type="button" ${index === state.places.length - 1 ? 'disabled' : ''} onclick="movePlace('${id}', 1)">↓</button>
+        <button class="icon secondary" type="button" ${index === lastIndex ? 'disabled' : ''} onclick="movePlace('${id}', 1)">↓</button>
         <button class="secondary" type="button" onclick="editPlace('${id}'); switchTab('placePanel')">編集</button>
       `;
     }
 
     function renderMap() {
       const frame = $('#mapFrame');
-      if (!state.places.length) {
+      const routePlaces = getRoutePlaces();
+      if (!routePlaces.length) {
         frame.removeAttribute('src');
         return;
       }
 
-      const query = state.places.length === 1
-        ? placeQuery(state.places[0])
-        : state.places.map(placeQuery).join(' to ');
+      const query = routePlaces.length === 1
+        ? placeQuery(routePlaces[0])
+        : routePlaces.map(placeQuery).join(' to ');
       frame.src = `https://www.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
     }
 
-    function buildRouteUrl() {
-      if (!state.places.length) {
+    function buildRouteUrl(routePlaces) {
+      if (!routePlaces.length) {
         return '#';
       }
 
-      const places = state.places.map(placeQuery);
+      const places = routePlaces.map(placeQuery);
       if (places.length === 1) {
         return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(places[0])}`;
       }
@@ -1005,13 +1033,43 @@
       return [place.name, place.address, '北海道'].filter(Boolean).join(' ');
     }
 
+    function getSelectedRouteDay() {
+      return $('#routeDayFilter').value;
+    }
+
+    function getRoutePlaces() {
+      const selectedDay = getSelectedRouteDay();
+      if (selectedDay === 'all') {
+        return state.places;
+      }
+
+      return state.places.filter((place) => String(place.day || '') === selectedDay);
+    }
+
+    function routeDayLabel(day) {
+      if (day === 'all') {
+        return '全日程';
+      }
+
+      return day || '未定';
+    }
+
     function movePlace(id, direction) {
-      const places = state.places.slice();
-      const index = places.findIndex((place) => place.id === id);
-      const next = index + direction;
-      if (index < 0 || next < 0 || next >= places.length) {
+      const routePlaces = getRoutePlaces();
+      const routeIndex = routePlaces.findIndex((place) => place.id === id);
+      const nextRouteIndex = routeIndex + direction;
+      if (routeIndex < 0 || nextRouteIndex < 0 || nextRouteIndex >= routePlaces.length) {
         return;
       }
+
+      const nextId = routePlaces[nextRouteIndex].id;
+      const places = state.places.slice();
+      const index = places.findIndex((place) => place.id === id);
+      const next = places.findIndex((place) => place.id === nextId);
+      if (index < 0 || next < 0) {
+        return;
+      }
+
       [places[index], places[next]] = [places[next], places[index]];
       google.script.run
         .withSuccessHandler(updateState('ルート順を更新しました'))
