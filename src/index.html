@@ -73,6 +73,12 @@
       padding: 0;
     }
 
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.48;
+      transform: none;
+    }
+
     a {
       color: var(--sea);
       font-weight: 700;
@@ -108,11 +114,15 @@
     }
 
     .app {
+      position: relative;
+      z-index: 1;
       width: min(1120px, calc(100% - 28px));
       margin: -24px auto 48px;
     }
 
     .tabs {
+      position: relative;
+      z-index: 2;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
@@ -191,6 +201,10 @@
     textarea {
       min-height: 76px;
       resize: vertical;
+    }
+
+    select[multiple] {
+      min-height: 112px;
     }
 
     .span-2 { grid-column: span 2; }
@@ -380,9 +394,9 @@
 
   <main class="app">
     <nav class="tabs" aria-label="表示切り替え">
-      <button class="tab active" data-tab="expensePanel">割り勘</button>
-      <button class="tab" data-tab="placePanel">行きたい場所</button>
-      <button class="tab" data-tab="routePanel">地図とルート</button>
+      <button class="tab active" type="button" data-tab="expensePanel">割り勘</button>
+      <button class="tab" type="button" data-tab="placePanel">行きたい場所</button>
+      <button class="tab" type="button" data-tab="routePanel">地図とルート</button>
     </nav>
 
     <section id="expensePanel" class="panel active">
@@ -392,7 +406,7 @@
           <label class="span-4">名前
             <input id="membersInput" placeholder="例: はると、ゆう、みなみ">
           </label>
-          <button class="span-2" id="saveMembersButton">保存</button>
+          <button class="span-2" type="button" id="saveMembersButton">保存</button>
         </div>
       </div>
 
@@ -404,7 +418,9 @@
             <input type="date" id="expenseDate" required>
           </label>
           <label>払った人
-            <input id="expensePayer" list="memberList" placeholder="名前" required>
+            <select id="expensePayer" required>
+              <option value="">メンバーを選択</option>
+            </select>
           </label>
           <label class="span-2">何を払ったか
             <input id="expenseItem" placeholder="例: 札幌ラーメン" required>
@@ -419,7 +435,7 @@
             </select>
           </label>
           <label class="span-3">対象者
-            <input id="splitWith" placeholder="指定時: はると、ゆう">
+            <select id="splitWith" multiple></select>
           </label>
           <label class="span-3">メモ
             <input id="expenseMemo" placeholder="任意">
@@ -531,12 +547,16 @@
 
     function bindEvents() {
       document.querySelectorAll('.tab').forEach((button) => {
-        button.addEventListener('click', () => switchTab(button.dataset.tab));
+        button.addEventListener('click', (event) => {
+          event.preventDefault();
+          switchTab(button.dataset.tab);
+        });
       });
 
       $('#saveMembersButton').addEventListener('click', saveMembers);
       $('#expenseForm').addEventListener('submit', saveExpense);
       $('#placeForm').addEventListener('submit', savePlace);
+      $('#splitMode').addEventListener('change', updateSplitWithAvailability);
       $('#clearExpenseFormButton').addEventListener('click', clearExpenseForm);
       $('#clearPlaceFormButton').addEventListener('click', clearPlaceForm);
     }
@@ -575,7 +595,7 @@
       event.preventDefault();
       const splitWith = $('#splitMode').value === 'all'
         ? state.members
-        : splitNames($('#splitWith').value);
+        : selectedValues($('#splitWith'));
 
       const expense = {
         id: $('#expenseId').value,
@@ -637,9 +657,20 @@
     }
 
     function renderMembers() {
-      $('#memberList').innerHTML = state.members
-        .map((member) => `<option value="${escapeHtml(member)}"></option>`)
+      const payerValue = $('#expensePayer').value;
+      const selectedSplit = selectedValues($('#splitWith'));
+
+      $('#expensePayer').innerHTML = [
+        '<option value="">メンバーを選択</option>',
+        state.members.map((member) => `<option value="${escapeHtml(member)}">${escapeHtml(member)}</option>`).join(''),
+      ].join('');
+      $('#expensePayer').value = state.members.includes(payerValue) ? payerValue : '';
+
+      $('#splitWith').innerHTML = state.members
+        .map((member) => `<option value="${escapeHtml(member)}">${escapeHtml(member)}</option>`)
         .join('');
+      setSelectedValues($('#splitWith'), selectedSplit.length ? selectedSplit : state.members);
+      updateSplitWithAvailability();
     }
 
     function renderExpenses() {
@@ -855,7 +886,8 @@
       $('#expenseItem').value = expense.item;
       $('#expenseAmount').value = expense.amount;
       $('#splitMode').value = 'custom';
-      $('#splitWith').value = (expense.splitWith || []).join('、');
+      setSelectedValues($('#splitWith'), expense.splitWith || []);
+      updateSplitWithAvailability();
       $('#expenseMemo').value = expense.memo || '';
       window.scrollTo({ top: 260, behavior: 'smooth' });
     }
@@ -894,6 +926,8 @@
       $('#expenseId').value = '';
       $('#expenseDate').value = new Date().toISOString().slice(0, 10);
       $('#splitMode').value = 'all';
+      setSelectedValues($('#splitWith'), state.members);
+      updateSplitWithAvailability();
     }
 
     function clearPlaceForm() {
@@ -908,6 +942,32 @@
         .map((name) => name.trim())
         .filter(Boolean);
     }
+
+    function selectedValues(select) {
+      return Array.from(select.selectedOptions).map((option) => option.value).filter(Boolean);
+    }
+
+    function setSelectedValues(select, values) {
+      const selected = new Set(values || []);
+      Array.from(select.options).forEach((option) => {
+        option.selected = selected.has(option.value);
+      });
+    }
+
+    function updateSplitWithAvailability() {
+      const useAllMembers = $('#splitMode').value === 'all';
+      $('#splitWith').disabled = useAllMembers;
+      if (useAllMembers) {
+        setSelectedValues($('#splitWith'), state.members);
+      }
+    }
+
+    window.switchTab = switchTab;
+    window.editExpense = editExpense;
+    window.editPlace = editPlace;
+    window.removeExpense = removeExpense;
+    window.removePlace = removePlace;
+    window.movePlace = movePlace;
 
     function escapeHtml(value) {
       return String(value || '')
