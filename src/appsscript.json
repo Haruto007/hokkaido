@@ -3,5 +3,8 @@
   "dependencies": {
   },
   "exceptionLogging": "STACKDRIVER",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/script.storage"
+  ],
   "runtimeVersion": "V8"
 }

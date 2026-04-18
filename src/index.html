@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>北海道旅ノート</title>
+  <style>
+    :root {
+      --ink: #17211b;
+      --muted: #5a655e;
+      --paper: #f7f8f4;
+      --line: #d7ded2;
+      --green: #2f6f4e;
+      --green-dark: #204f38;
+      --sea: #23748f;
+      --snow: #ffffff;
+      --warn: #b94d2b;
+      --soft: #e8f0e7;
+      --sun: #f0c84b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+      line-height: 1.6;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      min-height: 42px;
+      border: 0;
+      border-radius: 8px;
+      color: var(--snow);
+      background: var(--green);
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease;
+    }
+
+    button:hover {
+      background: var(--green-dark);
+      transform: translateY(-1px);
+    }
+
+    button.secondary {
+      color: var(--ink);
+      background: var(--soft);
+      border: 1px solid var(--line);
+    }
+
+    button.secondary:hover {
+      background: #dce9dc;
+    }
+
+    button.danger {
+      background: var(--warn);
+    }
+
+    button.icon {
+      width: 42px;
+      padding: 0;
+    }
+
+    a {
+      color: var(--sea);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .hero {
+      min-height: 280px;
+      color: var(--snow);
+      background:
+        linear-gradient(90deg, rgba(11, 31, 24, 0.78), rgba(11, 31, 24, 0.18)),
+        url("https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1800&q=80") center/cover;
+      display: flex;
+      align-items: flex-end;
+      padding: 36px 20px 44px;
+    }
+
+    .hero-inner {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(32px, 8vw, 72px);
+      line-height: 1;
+    }
+
+    .hero p {
+      max-width: 720px;
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .app {
+      width: min(1120px, calc(100% - 28px));
+      margin: -24px auto 48px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .tab {
+      color: var(--ink);
+      background: var(--snow);
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 24px rgba(35, 52, 43, 0.08);
+    }
+
+    .tab.active {
+      color: var(--snow);
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .band {
+      background: var(--snow);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 24px rgba(35, 52, 43, 0.08);
+    }
+
+    .band h2,
+    .band h3 {
+      margin: 0 0 12px;
+      line-height: 1.3;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: var(--snow);
+      padding: 9px 10px;
+    }
+
+    textarea {
+      min-height: 76px;
+      resize: vertical;
+    }
+
+    .span-2 { grid-column: span 2; }
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    .span-6 { grid-column: span 6; }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .metric {
+      min-height: 92px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcf9;
+    }
+
+    .metric b {
+      display: block;
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .item {
+      display: grid;
+      gap: 8px;
+      min-height: 86px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcf9;
+    }
+
+    .item-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .item-title {
+      min-width: 0;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .item-meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--green-dark);
+      padding: 3px 9px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .settlement {
+      border-left: 4px solid var(--sun);
+    }
+
+    .map-frame {
+      width: 100%;
+      height: min(58vh, 520px);
+      min-height: 360px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .route-tools {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      padding: 18px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.62);
+    }
+
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      max-width: min(360px, calc(100% - 32px));
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: var(--snow);
+      background: var(--green-dark);
+      box-shadow: 0 16px 40px rgba(23, 33, 27, 0.2);
+      transform: translateY(90px);
+      opacity: 0;
+      transition: opacity 180ms ease, transform 180ms ease;
+      z-index: 10;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 760px) {
+      .hero {
+        min-height: 240px;
+        padding: 28px 14px 40px;
+      }
+
+      .app {
+        width: min(100% - 20px, 1120px);
+      }
+
+      .tabs,
+      .grid,
+      .summary {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .span-2,
+      .span-3,
+      .span-4,
+      .span-6 {
+        grid-column: auto;
+      }
+
+      .item-head {
+        display: grid;
+      }
+
+      .item-actions {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <h1>北海道旅ノート</h1>
+      <p>支払い、行きたい場所、当日のルートをひとつに。移動中でもすぐ見返せる旅の共有メモ。</p>
+    </div>
+  </header>
+
+  <main class="app">
+    <nav class="tabs" aria-label="表示切り替え">
+      <button class="tab active" data-tab="expensePanel">割り勘</button>
+      <button class="tab" data-tab="placePanel">行きたい場所</button>
+      <button class="tab" data-tab="routePanel">地図とルート</button>
+    </nav>
+
+    <section id="expensePanel" class="panel active">
+      <div class="band">
+        <h2>メンバー</h2>
+        <div class="form-grid">
+          <label class="span-4">名前
+            <input id="membersInput" placeholder="例: はると、ゆう、みなみ">
+          </label>
+          <button class="span-2" id="saveMembersButton">保存</button>
+        </div>
+      </div>
+
+      <div class="band">
+        <h2>支払いを追加</h2>
+        <form id="expenseForm" class="form-grid">
+          <input type="hidden" id="expenseId">
+          <label>日付
+            <input type="date" id="expenseDate" required>
+          </label>
+          <label>払った人
+            <input id="expensePayer" list="memberList" placeholder="名前" required>
+          </label>
+          <label class="span-2">何を払ったか
+            <input id="expenseItem" placeholder="例: 札幌ラーメン" required>
+          </label>
+          <label>金額
+            <input id="expenseAmount" type="number" min="1" inputmode="numeric" placeholder="円" required>
+          </label>
+          <label>割る人数
+            <select id="splitMode">
+              <option value="all">全員</option>
+              <option value="custom">指定</option>
+            </select>
+          </label>
+          <label class="span-3">対象者
+            <input id="splitWith" placeholder="指定時: はると、ゆう">
+          </label>
+          <label class="span-3">メモ
+            <input id="expenseMemo" placeholder="任意">
+          </label>
+          <button class="span-3" type="submit">支払いを保存</button>
+          <button class="span-3 secondary" type="button" id="clearExpenseFormButton">入力をクリア</button>
+        </form>
+      </div>
+
+      <div class="grid">
+        <div class="band">
+          <h2>割り勘サマリー</h2>
+          <div class="summary" id="expenseSummary"></div>
+          <h3>精算メモ</h3>
+          <div class="list" id="settlementList"></div>
+        </div>
+        <div class="band">
+          <h2>支払い一覧</h2>
+          <div class="list" id="expenseList"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="placePanel" class="panel">
+      <div class="band">
+        <h2>場所を追加</h2>
+        <form id="placeForm" class="form-grid">
+          <input type="hidden" id="placeId">
+          <label class="span-2">場所
+            <input id="placeName" placeholder="例: 小樽運河" required>
+          </label>
+          <label>エリア
+            <input id="placeArea" placeholder="小樽">
+          </label>
+          <label>日程
+            <input id="placeDay" placeholder="1日目">
+          </label>
+          <label>状態
+            <select id="placeStatus">
+              <option>行きたい</option>
+              <option>予約済み</option>
+              <option>行った</option>
+              <option>保留</option>
+            </select>
+          </label>
+          <label class="span-6">住所や検索ワード
+            <input id="placeAddress" placeholder="店名だけでもOK">
+          </label>
+          <label class="span-6">メモ
+            <textarea id="placeNote" placeholder="営業時間、食べたいもの、チケット情報など"></textarea>
+          </label>
+          <button class="span-3" type="submit">場所を保存</button>
+          <button class="span-3 secondary" type="button" id="clearPlaceFormButton">入力をクリア</button>
+        </form>
+      </div>
+
+      <div class="band">
+        <h2>行きたい場所リスト</h2>
+        <div class="list" id="placeList"></div>
+      </div>
+    </section>
+
+    <section id="routePanel" class="panel">
+      <div class="band">
+        <div class="route-tools">
+          <div>
+            <h2>地図とルート</h2>
+            <p class="muted">リスト順でルートを作ります。順番は上下ボタンで編集できます。</p>
+          </div>
+          <a id="routeLink" href="#" target="_blank" rel="noreferrer">Google マップでルート確認</a>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="band">
+          <h3>ルート順</h3>
+          <div class="list" id="routeList"></div>
+        </div>
+        <div class="band">
+          <h3>地図</h3>
+          <iframe id="mapFrame" class="map-frame" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <datalist id="memberList"></datalist>
+  <div id="toast" class="toast" role="status"></div>
+
+  <script>
+    const state = {
+      members: [],
+      expenses: [],
+      places: [],
+    };
+
+    const yen = new Intl.NumberFormat('ja-JP', {
+      style: 'currency',
+      currency: 'JPY',
+      maximumFractionDigits: 0,
+    });
+
+    const $ = (selector) => document.querySelector(selector);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      bindEvents();
+      $('#expenseDate').value = new Date().toISOString().slice(0, 10);
+      loadData();
+    });
+
+    function bindEvents() {
+      document.querySelectorAll('.tab').forEach((button) => {
+        button.addEventListener('click', () => switchTab(button.dataset.tab));
+      });
+
+      $('#saveMembersButton').addEventListener('click', saveMembers);
+      $('#expenseForm').addEventListener('submit', saveExpense);
+      $('#placeForm').addEventListener('submit', savePlace);
+      $('#clearExpenseFormButton').addEventListener('click', clearExpenseForm);
+      $('#clearPlaceFormButton').addEventListener('click', clearPlaceForm);
+    }
+
+    function loadData() {
+      google.script.run
+        .withSuccessHandler((data) => {
+          Object.assign(state, data);
+          render();
+        })
+        .withFailureHandler(showError)
+        .getTripData();
+    }
+
+    function switchTab(panelId) {
+      document.querySelectorAll('.tab').forEach((button) => {
+        button.classList.toggle('active', button.dataset.tab === panelId);
+      });
+      document.querySelectorAll('.panel').forEach((panel) => {
+        panel.classList.toggle('active', panel.id === panelId);
+      });
+      if (panelId === 'routePanel') {
+        renderMap();
+      }
+    }
+
+    function saveMembers() {
+      const members = splitNames($('#membersInput').value);
+      google.script.run
+        .withSuccessHandler(updateState('メンバーを保存しました'))
+        .withFailureHandler(showError)
+        .updateMembers(members);
+    }
+
+    function saveExpense(event) {
+      event.preventDefault();
+      const splitWith = $('#splitMode').value === 'all'
+        ? state.members
+        : splitNames($('#splitWith').value);
+
+      const expense = {
+        id: $('#expenseId').value,
+        date: $('#expenseDate').value,
+        payer: $('#expensePayer').value,
+        item: $('#expenseItem').value,
+        amount: $('#expenseAmount').value,
+        splitWith,
+        memo: $('#expenseMemo').value,
+      };
+
+      google.script.run
+        .withSuccessHandler((data) => {
+          updateState('支払いを保存しました')(data);
+          clearExpenseForm();
+        })
+        .withFailureHandler(showError)
+        .saveExpense(expense);
+    }
+
+    function savePlace(event) {
+      event.preventDefault();
+      const existing = state.places.find((place) => place.id === $('#placeId').value);
+      const place = {
+        id: $('#placeId').value,
+        name: $('#placeName').value,
+        area: $('#placeArea').value,
+        address: $('#placeAddress').value,
+        note: $('#placeNote').value,
+        day: $('#placeDay').value,
+        status: $('#placeStatus').value,
+        order: existing ? existing.order : state.places.length,
+      };
+
+      google.script.run
+        .withSuccessHandler((data) => {
+          updateState('場所を保存しました')(data);
+          clearPlaceForm();
+        })
+        .withFailureHandler(showError)
+        .savePlace(place);
+    }
+
+    function updateState(message) {
+      return (data) => {
+        Object.assign(state, data);
+        render();
+        showToast(message);
+      };
+    }
+
+    function render() {
+      $('#membersInput').value = state.members.join('、');
+      renderMembers();
+      renderExpenses();
+      renderPlaces();
+      renderRoute();
+      renderMap();
+    }
+
+    function renderMembers() {
+      $('#memberList').innerHTML = state.members
+        .map((member) => `<option value="${escapeHtml(member)}"></option>`)
+        .join('');
+    }
+
+    function renderExpenses() {
+      const total = state.expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+      const perPerson = calculateBalances();
+      const paidMembers = Object.keys(perPerson.paid);
+
+      $('#expenseSummary').innerHTML = [
+        metric('合計', yen.format(total)),
+        metric('支払い人数', `${paidMembers.length}人`),
+        metric('記録数', `${state.expenses.length}件`),
+      ].join('');
+
+      $('#settlementList').innerHTML = renderSettlements(perPerson.balances);
+
+      if (!state.expenses.length) {
+        $('#expenseList').innerHTML = '<div class="empty">支払いを追加すると、ここに一覧と精算メモが出ます。</div>';
+        return;
+      }
+
+      $('#expenseList').innerHTML = state.expenses.map((expense) => `
+        <article class="item">
+          <div class="item-head">
+            <div>
+              <div class="item-title">${escapeHtml(expense.item)} ・ ${yen.format(Number(expense.amount || 0))}</div>
+              <div class="item-meta">${escapeHtml(expense.date)} / ${escapeHtml(expense.payer)} が支払い</div>
+            </div>
+            <div class="item-actions">
+              <button class="secondary" type="button" onclick="editExpense('${expense.id}')">編集</button>
+              <button class="danger" type="button" onclick="removeExpense('${expense.id}')">削除</button>
+            </div>
+          </div>
+          <div class="pill-row">${(expense.splitWith || []).map((name) => `<span class="pill">${escapeHtml(name)}</span>`).join('')}</div>
+          ${expense.memo ? `<div class="item-meta">${escapeHtml(expense.memo)}</div>` : ''}
+        </article>
+      `).join('');
+    }
+
+    function metric(label, value) {
+      return `<div class="metric"><b>${escapeHtml(value)}</b><span>${escapeHtml(label)}</span></div>`;
+    }
+
+    function calculateBalances() {
+      const paid = {};
+      const owed = {};
+      const members = new Set(state.members);
+
+      state.expenses.forEach((expense) => {
+        const amount = Number(expense.amount || 0);
+        const splitWith = (expense.splitWith || []).length ? expense.splitWith : state.members;
+        members.add(expense.payer);
+        paid[expense.payer] = (paid[expense.payer] || 0) + amount;
+
+        splitWith.forEach((name) => {
+          members.add(name);
+          owed[name] = (owed[name] || 0) + amount / splitWith.length;
+        });
+      });
+
+      const balances = Array.from(members).map((name) => ({
+        name,
+        balance: Math.round((paid[name] || 0) - (owed[name] || 0)),
+      }));
+
+      return { paid, owed, balances };
+    }
+
+    function renderSettlements(balances) {
+      const debtors = balances
+        .filter((person) => person.balance < 0)
+        .map((person) => ({ name: person.name, amount: Math.abs(person.balance) }))
+        .sort((a, b) => b.amount - a.amount);
+      const creditors = balances
+        .filter((person) => person.balance > 0)
+        .map((person) => ({ name: person.name, amount: person.balance }))
+        .sort((a, b) => b.amount - a.amount);
+      const settlements = [];
+      let d = 0;
+      let c = 0;
+
+      while (debtors[d] && creditors[c]) {
+        const amount = Math.min(debtors[d].amount, creditors[c].amount);
+        if (amount > 0) {
+          settlements.push(`${debtors[d].name} → ${creditors[c].name}：${yen.format(amount)}`);
+        }
+        debtors[d].amount -= amount;
+        creditors[c].amount -= amount;
+        if (debtors[d].amount <= 0) d += 1;
+        if (creditors[c].amount <= 0) c += 1;
+      }
+
+      if (!settlements.length) {
+        return '<div class="empty settlement">精算はまだありません。</div>';
+      }
+
+      return settlements.map((text) => `<div class="item settlement">${escapeHtml(text)}</div>`).join('');
+    }
+
+    function renderPlaces() {
+      if (!state.places.length) {
+        $('#placeList').innerHTML = '<div class="empty">行きたい場所を追加すると、地図とルートにも反映されます。</div>';
+        return;
+      }
+
+      $('#placeList').innerHTML = state.places.map((place, index) => placeCard(place, index, false)).join('');
+    }
+
+    function renderRoute() {
+      if (!state.places.length) {
+        $('#routeList').innerHTML = '<div class="empty">場所を追加して、旅の順番を作りましょう。</div>';
+        $('#routeLink').href = '#';
+        return;
+      }
+
+      $('#routeList').innerHTML = state.places.map((place, index) => placeCard(place, index, true)).join('');
+      $('#routeLink').href = buildRouteUrl();
+    }
+
+    function placeCard(place, index, routeMode) {
+      const query = placeQuery(place);
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+      return `
+        <article class="item">
+          <div class="item-head">
+            <div>
+              <div class="item-title">${index + 1}. ${escapeHtml(place.name)}</div>
+              <div class="item-meta">${[place.day, place.area, place.status].filter(Boolean).map(escapeHtml).join(' / ')}</div>
+            </div>
+            <div class="item-actions">
+              ${routeMode ? routeButtons(place.id, index) : `<button class="secondary" type="button" onclick="editPlace('${place.id}')">編集</button>`}
+              <a href="${mapsUrl}" target="_blank" rel="noreferrer">地図</a>
+              <button class="danger" type="button" onclick="removePlace('${place.id}')">削除</button>
+            </div>
+          </div>
+          ${place.address ? `<div class="item-meta">${escapeHtml(place.address)}</div>` : ''}
+          ${place.note ? `<div>${escapeHtml(place.note)}</div>` : ''}
+        </article>
+      `;
+    }
+
+    function routeButtons(id, index) {
+      return `
+        <button class="icon secondary" type="button" ${index === 0 ? 'disabled' : ''} onclick="movePlace('${id}', -1)">↑</button>
+        <button class="icon secondary" type="button" ${index === state.places.length - 1 ? 'disabled' : ''} onclick="movePlace('${id}', 1)">↓</button>
+        <button class="secondary" type="button" onclick="editPlace('${id}'); switchTab('placePanel')">編集</button>
+      `;
+    }
+
+    function renderMap() {
+      const frame = $('#mapFrame');
+      if (!state.places.length) {
+        frame.removeAttribute('src');
+        return;
+      }
+
+      const query = state.places.length === 1
+        ? placeQuery(state.places[0])
+        : state.places.map(placeQuery).join(' to ');
+      frame.src = `https://www.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
+    }
+
+    function buildRouteUrl() {
+      if (!state.places.length) {
+        return '#';
+      }
+
+      const places = state.places.map(placeQuery);
+      if (places.length === 1) {
+        return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(places[0])}`;
+      }
+
+      const origin = places[0];
+      const destination = places[places.length - 1];
+      const waypoints = places.slice(1, -1).join('|');
+      const params = new URLSearchParams({
+        api: '1',
+        origin,
+        destination,
+        travelmode: 'driving',
+      });
+
+      if (waypoints) {
+        params.set('waypoints', waypoints);
+      }
+
+      return `https://www.google.com/maps/dir/?${params.toString()}`;
+    }
+
+    function placeQuery(place) {
+      return [place.name, place.address, place.area, '北海道'].filter(Boolean).join(' ');
+    }
+
+    function movePlace(id, direction) {
+      const places = state.places.slice();
+      const index = places.findIndex((place) => place.id === id);
+      const next = index + direction;
+      if (index < 0 || next < 0 || next >= places.length) {
+        return;
+      }
+      [places[index], places[next]] = [places[next], places[index]];
+      google.script.run
+        .withSuccessHandler(updateState('ルート順を更新しました'))
+        .withFailureHandler(showError)
+        .updatePlaceOrder(places.map((place) => place.id));
+    }
+
+    function editExpense(id) {
+      const expense = state.expenses.find((item) => item.id === id);
+      if (!expense) return;
+      $('#expenseId').value = expense.id;
+      $('#expenseDate').value = expense.date;
+      $('#expensePayer').value = expense.payer;
+      $('#expenseItem').value = expense.item;
+      $('#expenseAmount').value = expense.amount;
+      $('#splitMode').value = 'custom';
+      $('#splitWith').value = (expense.splitWith || []).join('、');
+      $('#expenseMemo').value = expense.memo || '';
+      window.scrollTo({ top: 260, behavior: 'smooth' });
+    }
+
+    function editPlace(id) {
+      const place = state.places.find((item) => item.id === id);
+      if (!place) return;
+      $('#placeId').value = place.id;
+      $('#placeName').value = place.name;
+      $('#placeArea').value = place.area || '';
+      $('#placeAddress').value = place.address || '';
+      $('#placeNote').value = place.note || '';
+      $('#placeDay').value = place.day || '';
+      $('#placeStatus').value = place.status || '行きたい';
+      window.scrollTo({ top: 260, behavior: 'smooth' });
+    }
+
+    function removeExpense(id) {
+      if (!confirm('この支払いを削除しますか？')) return;
+      google.script.run
+        .withSuccessHandler(updateState('支払いを削除しました'))
+        .withFailureHandler(showError)
+        .deleteExpense(id);
+    }
+
+    function removePlace(id) {
+      if (!confirm('この場所を削除しますか？')) return;
+      google.script.run
+        .withSuccessHandler(updateState('場所を削除しました'))
+        .withFailureHandler(showError)
+        .deletePlace(id);
+    }
+
+    function clearExpenseForm() {
+      $('#expenseForm').reset();
+      $('#expenseId').value = '';
+      $('#expenseDate').value = new Date().toISOString().slice(0, 10);
+      $('#splitMode').value = 'all';
+    }
+
+    function clearPlaceForm() {
+      $('#placeForm').reset();
+      $('#placeId').value = '';
+      $('#placeStatus').value = '行きたい';
+    }
+
+    function splitNames(value) {
+      return String(value || '')
+        .split(/[\n,、]/)
+        .map((name) => name.trim())
+        .filter(Boolean);
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function showToast(message) {
+      const toast = $('#toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function showError(error) {
+      showToast(error && error.message ? error.message : String(error));
+    }
+  </script>
+</body>
+</html>
